@@ -69,6 +69,7 @@ pub async fn burn(
     token: Pubkey,
     edition: Pubkey,
     collection_metadata: Option<Pubkey>,
+    spl_token: Pubkey,
 ) -> Result<(), BanksClientError> {
     let tx = Transaction::new_signed_with_payer(
         &[instruction::burn_nft(
@@ -78,7 +79,7 @@ pub async fn burn(
             mint,
             token,
             edition,
-            spl_token::ID,
+            spl_token,
             collection_metadata,
         )],
         Some(&owner.pubkey()),
@@ -198,3 +199,50 @@ pub async fn create_mint(
 
     context.banks_client.process_transaction(tx).await
 }
+
+
+// maybe use spl-token-client once it's been published w/ token-2022
+pub async fn create_mint_with_close_authority(
+    context: &mut ProgramTestContext,
+    mint: &Keypair,
+    manager: &Pubkey,
+    decimals: u8,
+) -> Result<(), BanksClientError> {
+    use spl_token_2022::extension::ExtensionType;
+    let rent = context.banks_client.get_rent().await.unwrap();
+    let space = ExtensionType::get_account_len::<
+        spl_token_2022::state::Mint>(&[ExtensionType::MintCloseAuthority]);
+
+    let tx = Transaction::new_signed_with_payer(
+        &[
+            system_instruction::create_account(
+                &context.payer.pubkey(),
+                &mint.pubkey(),
+                rent.minimum_balance(space),
+                space as u64,
+                &spl_token_2022::id(),
+            ),
+            spl_token_2022::instruction::initialize_mint_close_authority(
+                &spl_token_2022::id(),
+                &mint.pubkey(),
+                Some(manager),
+            )
+            .unwrap(),
+            spl_token_2022::instruction::initialize_mint(
+                &spl_token_2022::id(),
+                &mint.pubkey(),
+                manager,
+                Some(manager),
+                decimals,
+            )
+            .unwrap(),
+        ],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, mint],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
+}
+
+

@@ -749,6 +749,32 @@ pub fn create_master_edition_v3(
     payer: Pubkey,
     max_supply: Option<u64>,
 ) -> Instruction {
+    create_master_edition_v3_with_token_program(
+        program_id,
+        edition,
+        mint,
+        update_authority,
+        mint_authority,
+        metadata,
+        payer,
+        spl_token::id(),
+        max_supply,
+    )
+}
+
+/// creates a create_master_edition instruction
+#[allow(clippy::too_many_arguments)]
+pub fn create_master_edition_v3_with_token_program(
+    program_id: Pubkey,
+    edition: Pubkey,
+    mint: Pubkey,
+    update_authority: Pubkey,
+    mint_authority: Pubkey,
+    metadata: Pubkey,
+    payer: Pubkey,
+    spl_token: Pubkey,
+    max_supply: Option<u64>,
+) -> Instruction {
     let accounts = vec![
         AccountMeta::new(edition, false),
         AccountMeta::new(mint, false),
@@ -756,7 +782,7 @@ pub fn create_master_edition_v3(
         AccountMeta::new_readonly(mint_authority, true),
         AccountMeta::new(payer, true),
         AccountMeta::new(metadata, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_token, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
     ];
 

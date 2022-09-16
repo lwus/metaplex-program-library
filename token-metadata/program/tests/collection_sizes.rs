@@ -648,6 +648,7 @@ mod size_tracking {
             collection_item_nft.token.pubkey(),
             item_master_edition_account.pubkey,
             Some(collection_parent_nft.pubkey),
+            spl_token::id(),
         )
         .await
         .unwrap();

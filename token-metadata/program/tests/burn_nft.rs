@@ -75,6 +75,7 @@ mod burn_nft {
             test_metadata.token.pubkey(),
             master_edition.pubkey,
             None,
+            spl_token::id(),
         )
         .await
         .unwrap();
@@ -163,6 +164,7 @@ mod burn_nft {
             print_edition.token.pubkey(),
             print_edition.new_edition_pubkey,
             None,
+            spl_token::id(),
         )
         .await
         .unwrap_err();
@@ -232,6 +234,7 @@ mod burn_nft {
             original_nft.token.pubkey(),
             master_edition.pubkey,
             None,
+            spl_token::id(),
         )
         .await
         .unwrap_err();
@@ -348,6 +351,7 @@ mod burn_nft {
             collection_item_nft.token.pubkey(),
             item_master_edition_account.pubkey,
             None,
+            spl_token::id(),
         )
         .await
         .unwrap_err();
@@ -467,6 +471,7 @@ mod burn_nft {
             collection_item_nft.token.pubkey(),
             item_master_edition_account.pubkey,
             Some(collection_parent_nft.pubkey),
+            spl_token::id(),
         )
         .await
         .unwrap();
@@ -567,6 +572,7 @@ mod burn_nft {
             collection_item_nft.token.pubkey(),
             item_master_edition_account.pubkey,
             Some(collection_parent_nft.pubkey),
+            spl_token::id(),
         )
         .await
         .unwrap();
@@ -633,6 +639,7 @@ mod burn_nft {
             test_metadata.token.pubkey(),
             master_edition.pubkey,
             None,
+            spl_token::id(),
         )
         .await
         .unwrap_err();
@@ -714,10 +721,159 @@ mod burn_nft {
             test_metadata.token.pubkey(),
             master_edition.pubkey,
             None,
+            spl_token::id(),
         )
         .await
         .unwrap_err();
 
         assert_custom_error!(err, MetadataError::InvalidOwner);
+    }
+
+
+    #[tokio::test]
+    async fn burn_and_close_mint_account() {
+        let mut pc = ProgramTest::default();
+        pc.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+        pc.add_program("spl_token_2022", spl_token_2022::id(), None);
+
+        let mut context = pc.start_with_context().await;
+
+        let test_metadata = Metadata::new();
+
+        let payer = context.payer.pubkey();
+        create_mint_with_close_authority(
+            &mut context,
+            &test_metadata.mint,
+            &payer,
+            0,
+        )
+        .await.unwrap();
+        create_token_account(
+            &mut context,
+            &test_metadata.token,
+            &test_metadata.mint.pubkey(),
+            &payer,
+            &spl_token_2022::id(),
+        )
+        .await.unwrap();
+        mint_tokens(
+            &mut context,
+            &test_metadata.mint.pubkey(),
+            &test_metadata.token.pubkey(),
+            1,
+            &payer,
+            None,
+            &spl_token_2022::id(),
+        )
+        .await.unwrap();
+
+        let tx = solana_sdk::transaction::Transaction::new_signed_with_payer(
+            &[instruction::create_metadata_accounts_v2(
+                mpl_token_metadata::id(),
+                test_metadata.pubkey,
+                test_metadata.mint.pubkey(),
+                payer,
+                payer,
+                payer,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                false,
+                None,
+                None,
+            )],
+            Some(&payer),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        let master_edition = MasterEditionV2::new(&test_metadata);
+        let tx = solana_sdk::transaction::Transaction::new_signed_with_payer(
+            &[instruction::create_master_edition_v3_with_token_program(
+                mpl_token_metadata::id(),
+                master_edition.pubkey,
+                master_edition.mint_pubkey,
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                master_edition.metadata_pubkey,
+                context.payer.pubkey(),
+                spl_token_2022::id(),
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        // Metadata, Master Edition and token account exist.
+        let md_account = context
+            .banks_client
+            .get_account(test_metadata.pubkey)
+            .await
+            .unwrap();
+        let token_account = context
+            .banks_client
+            .get_account(test_metadata.token.pubkey())
+            .await
+            .unwrap();
+        let master_edition_account = context
+            .banks_client
+            .get_account(master_edition.pubkey)
+            .await
+            .unwrap();
+
+        assert!(md_account.is_some());
+        assert!(token_account.is_some());
+        assert!(master_edition_account.is_some());
+
+        let kpbytes = &context.payer;
+        let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        burn(
+            &mut context,
+            test_metadata.pubkey,
+            &payer,
+            test_metadata.mint.pubkey(),
+            test_metadata.token.pubkey(),
+            master_edition.pubkey,
+            None,
+            spl_token_2022::id(),
+        )
+        .await
+        .unwrap();
+
+        // Metadata, Master Edition, token, and mint account are burned.
+        let md_account = context
+            .banks_client
+            .get_account(test_metadata.pubkey)
+            .await
+            .unwrap();
+        let mint_account = context
+            .banks_client
+            .get_account(test_metadata.mint.pubkey())
+            .await
+            .unwrap();
+        let token_account = context
+            .banks_client
+            .get_account(test_metadata.token.pubkey())
+            .await
+            .unwrap();
+        let master_edition_account = context
+            .banks_client
+            .get_account(master_edition.pubkey)
+            .await
+            .unwrap();
+
+        assert!(md_account.is_none());
+        assert!(mint_account.is_none());
+        assert!(token_account.is_none());
+        assert!(master_edition_account.is_none());
     }
 }
