@@ -331,6 +331,16 @@ pub fn assert_supply_invariance(
     Ok(())
 }
 
+pub fn has_mint_close_authority(
+    mint_info: &AccountInfo,
+) -> Result<bool, ProgramError> {
+    use spl_token_2022::extension::{StateWithExtensions, ExtensionType};
+    let mint_data = mint_info.try_borrow_data()?;
+    let mint = StateWithExtensions::<spl_token_2022::state::Mint>::unpack(&mint_data)?;
+    let extension_types = mint.get_extension_types()?;
+    Ok(extension_types.contains(&ExtensionType::MintCloseAuthority))
+}
+
 pub fn transfer_mint_authority<'a>(
     edition_key: &Pubkey,
     edition_account_info: &AccountInfo<'a>,
@@ -377,6 +387,30 @@ pub fn transfer_mint_authority<'a>(
         msg!("Finished setting freeze authority");
     } else {
         msg!("Skipping freeze authority because this mint has none")
+    }
+
+    if *token_program_info.key == spl_token_2022::id() {
+        msg!("Setting mint close authority");
+        if has_mint_close_authority(mint_info)? {
+            // TODO: mint_close_authority != mint_authority?
+            // we currently require freeze_authority == mint_authority...
+            invoke_signed(
+                &set_authority(
+                    token_program_info.key,
+                    mint_info.key,
+                    Some(edition_key),
+                    AuthorityType::CloseMint,
+                    mint_authority_info.key,
+                    &[mint_authority_info.key],
+                )
+                .unwrap(),
+                accounts,
+                &[],
+            )?;
+            msg!("Finished setting mint close authority");
+        } else {
+            msg!("Skipping mint close authority because this mint has none")
+        }
     }
 
     Ok(())
