@@ -27,7 +27,7 @@ use solana_program::{
     sysvar::{rent::Rent, Sysvar},
 };
 use spl_token::{
-    instruction::{set_authority, AuthorityType},
+    instruction::{burn, close_account, mint_to, set_authority, AuthorityType},
     state::{Account, Mint},
 };
 use std::{collections::HashMap, convert::TryInto};
@@ -699,7 +699,7 @@ pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> ProgramResult {
         seeds.push(seed);
     }
     let result = invoke_signed(
-        &spl_token::instruction::burn(
+        &burn(
             token_program.key,
             source.key,
             mint.key,
@@ -726,7 +726,7 @@ pub fn spl_token_close(params: TokenCloseParams<'_, '_>) -> ProgramResult {
         seeds.push(seed);
     }
     let result = invoke_signed(
-        &spl_token::instruction::close_account(
+        &close_account(
             token_program.key,
             account.key,
             destination.key,
@@ -783,7 +783,7 @@ pub fn spl_token_mint_to(params: TokenMintToParams<'_, '_>) -> ProgramResult {
         seeds.push(seed);
     }
     let result = invoke_signed(
-        &spl_token::instruction::mint_to(
+        &mint_to(
             token_program.key,
             mint.key,
             destination.key,
