@@ -1082,9 +1082,7 @@ pub fn process_approve_use_authority(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
-    if *token_program_account_info.key != spl_token::id() {
-        return Err(MetadataError::InvalidTokenProgram.into());
-    }
+    assert_token_program_matches_package(&token_program_account_info)?;
     assert_signer(owner_info)?;
     assert_signer(payer)?;
     assert_currently_holding(
@@ -1167,9 +1165,7 @@ pub fn process_revoke_use_authority(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
-    if *token_program_account_info.key != spl_token::id() {
-        return Err(MetadataError::InvalidTokenProgram.into());
-    }
+    assert_token_program_matches_package(&token_program_account_info)?;
     assert_signer(owner_info)?;
     assert_currently_holding(
         program_id,
@@ -1250,9 +1246,7 @@ pub fn process_utilize(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
-    if *token_program_account_info.key != spl_token::id() {
-        return Err(MetadataError::InvalidTokenProgram.into());
-    }
+    assert_token_program_matches_package(&token_program_account_info)?;
     assert_signer(user_info)?;
     assert_currently_holding(
         program_id,
@@ -1586,9 +1580,7 @@ pub fn process_freeze_delegated_account(
     let mint_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
 
-    if *token_program_account_info.key != spl_token::id() {
-        return Err(MetadataError::InvalidTokenProgram.into());
-    }
+    assert_token_program_matches_package(&token_program_account_info)?;
 
     // assert that edition pda is the freeze authority of this mint
     let mint: Mint = assert_initialized(mint_info)?;
@@ -1641,9 +1633,7 @@ pub fn process_thaw_delegated_account(
     let edition_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
-    if *token_program_account_info.key != spl_token::id() {
-        return Err(MetadataError::InvalidTokenProgram.into());
-    }
+    assert_token_program_matches_package(&token_program_account_info)?;
 
     // assert that edition pda is the freeze authority of this mint
     let mint: Mint = assert_initialized(mint_info)?;
