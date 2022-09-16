@@ -22,8 +22,8 @@ use crate::{
     utils::{
         assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
         assert_freeze_authority_matches_mint, assert_initialized,
-        assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
-        assert_token_program_matches_package, assert_update_authority_is_correct,
+        assert_mint_authority_matches_mint, assert_owned_by, assert_owned_by_token_program,
+        assert_signer, assert_token_program_matches_package, assert_update_authority_is_correct,
         assert_verified_member_of_collection, check_token_standard, create_or_allocate_account_raw,
         decrement_collection_size, get_owner_from_token_account, increment_collection_size,
         process_create_metadata_accounts_logic,
@@ -403,7 +403,7 @@ pub fn process_update_primary_sale_happened_via_token(
     let mut metadata = Metadata::from_account_info(metadata_account_info)?;
 
     assert_owned_by(metadata_account_info, program_id)?;
-    assert_owned_by(token_account_info, &spl_token::id())?;
+    assert_owned_by_token_program(token_account_info)?;
 
     if !owner_info.is_signer {
         return Err(ProgramError::MissingRequiredSignature);
@@ -526,7 +526,7 @@ pub fn process_create_master_edition(
     assert_token_program_matches_package(token_program_info)?;
     assert_mint_authority_matches_mint(&mint.mint_authority, mint_authority_info)?;
     assert_owned_by(metadata_account_info, program_id)?;
-    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owned_by_token_program(mint_info)?;
 
     if metadata.mint != *mint_info.key {
         return Err(MetadataError::MintMismatch.into());
@@ -638,8 +638,8 @@ pub fn process_convert_master_edition_v1_to_v2(
     let printing_mint_info = next_account_info(account_info_iter)?;
 
     assert_owned_by(master_edition_info, program_id)?;
-    assert_owned_by(one_time_printing_auth_mint_info, &spl_token::id())?;
-    assert_owned_by(printing_mint_info, &spl_token::id())?;
+    assert_owned_by_token_program(one_time_printing_auth_mint_info)?;
+    assert_owned_by_token_program(printing_mint_info)?;
     let master_edition = MasterEditionV1::from_account_info(master_edition_info)?;
     let printing_mint: Mint = assert_initialized(printing_mint_info)?;
     let auth_mint: Mint = assert_initialized(one_time_printing_auth_mint_info)?;
@@ -825,7 +825,7 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
 
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(collection_info, program_id)?;
-    assert_owned_by(collection_mint, &spl_token::id())?;
+    assert_owned_by_token_program(collection_mint)?;
     assert_owned_by(edition_account_info, program_id)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
@@ -887,7 +887,7 @@ pub fn verify_sized_collection_item(
 
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(collection_info, program_id)?;
-    assert_owned_by(collection_mint, &spl_token::id())?;
+    assert_owned_by_token_program(collection_mint)?;
     assert_owned_by(edition_account_info, program_id)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
@@ -950,7 +950,7 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     assert_signer(collection_authority_info)?;
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(collection_info, program_id)?;
-    assert_owned_by(collection_mint, &spl_token::id())?;
+    assert_owned_by_token_program(collection_mint)?;
     assert_owned_by(edition_account_info, program_id)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
@@ -1012,7 +1012,7 @@ pub fn unverify_sized_collection_item(
 
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(collection_info, program_id)?;
-    assert_owned_by(collection_mint, &spl_token::id())?;
+    assert_owned_by_token_program(collection_mint)?;
     assert_owned_by(edition_account_info, program_id)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
@@ -1344,7 +1344,7 @@ pub fn process_approve_collection_authority(
 
     let metadata = Metadata::from_account_info(metadata_info)?;
     assert_owned_by(metadata_info, program_id)?;
-    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owned_by_token_program(mint_info)?;
     assert_signer(update_authority)?;
     assert_signer(payer)?;
     if metadata.update_authority != *update_authority.key {
@@ -1399,7 +1399,7 @@ pub fn process_revoke_collection_authority(
     let mint_info = next_account_info(account_info_iter)?;
     let metadata = Metadata::from_account_info(metadata_info)?;
     assert_owned_by(metadata_info, program_id)?;
-    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owned_by_token_program(mint_info)?;
     assert_signer(revoke_authority)?;
     if metadata.update_authority != *revoke_authority.key
         && *delegate_authority.key != *revoke_authority.key
@@ -1449,7 +1449,7 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
 
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(collection_info, program_id)?;
-    assert_owned_by(collection_mint, &spl_token::id())?;
+    assert_owned_by_token_program(collection_mint)?;
     assert_owned_by(edition_account_info, program_id)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
@@ -1515,7 +1515,7 @@ pub fn set_and_verify_sized_collection_item(
 
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(collection_info, program_id)?;
-    assert_owned_by(collection_mint, &spl_token::id())?;
+    assert_owned_by_token_program(collection_mint)?;
     assert_owned_by(edition_account_info, program_id)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
@@ -1849,7 +1849,7 @@ pub fn set_collection_size(
     assert_owned_by(parent_nft_metadata_account_info, program_id)?;
 
     // Mint owned by spl token program.
-    assert_owned_by(collection_mint_account_info, &spl_token::id())?;
+    assert_owned_by_token_program(collection_mint_account_info)?;
 
     let mut metadata = Metadata::from_account_info(parent_nft_metadata_account_info)?;
 
@@ -1915,7 +1915,7 @@ pub fn bubblegum_set_collection_size(
     assert_owned_by(parent_nft_metadata_account_info, program_id)?;
 
     // Mint owned by spl token program.
-    assert_owned_by(collection_mint_account_info, &spl_token::id())?;
+    assert_owned_by_token_program(collection_mint_account_info)?;
 
     let mut metadata = Metadata::from_account_info(parent_nft_metadata_account_info)?;
 
