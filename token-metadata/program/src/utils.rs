@@ -837,6 +837,14 @@ pub fn assert_owned_by_token_program(account: &AccountInfo) -> ProgramResult {
     assert_owned_by(account, &spl_token::id())
 }
 
+pub fn assert_owned_by_same_program(lhs: &AccountInfo, rhs: &AccountInfo) -> ProgramResult {
+    if lhs.owner != rhs.owner {
+        Err(MetadataError::IncorrectOwner.into())
+    } else {
+        Ok(())
+    }
+}
+
 pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> ProgramResult {
     if account.owner != owner {
         Err(MetadataError::IncorrectOwner.into())
@@ -1113,6 +1121,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     assert_token_program_matches_package(token_program_account_info)?;
     assert_owned_by_token_program(mint_info)?;
     assert_owned_by_token_program(token_account_info)?;
+    assert_owned_by_same_program(mint_info, token_account_info)?;
     assert_owned_by(master_edition_account_info, program_id)?;
     assert_owned_by(master_metadata_account_info, program_id)?;
 
@@ -1214,10 +1223,10 @@ pub fn assert_currently_holding(
 ) -> ProgramResult {
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by_token_program(mint_info)?;
+    assert_owned_by_token_program(token_account_info)?;
+    assert_owned_by_same_program(mint_info, token_account_info)?;
 
     let token_account: Account = assert_initialized(token_account_info)?;
-
-    assert_owned_by_token_program(token_account_info)?;
 
     if token_account.owner != *owner_info.key {
         return Err(MetadataError::InvalidOwner.into());
@@ -1260,10 +1269,10 @@ pub fn assert_delegated_tokens(
     token_account_info: &AccountInfo,
 ) -> ProgramResult {
     assert_owned_by_token_program(mint_info)?;
+    assert_owned_by_token_program(token_account_info)?;
+    assert_owned_by_same_program(mint_info, token_account_info)?;
 
     let token_account: Account = assert_initialized(token_account_info)?;
-
-    assert_owned_by_token_program(token_account_info)?;
 
     if token_account.mint != *mint_info.key {
         return Err(MetadataError::MintMismatch.into());

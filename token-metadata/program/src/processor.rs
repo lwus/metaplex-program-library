@@ -22,8 +22,9 @@ use crate::{
     utils::{
         assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
         assert_freeze_authority_matches_mint, assert_initialized,
-        assert_mint_authority_matches_mint, assert_owned_by, assert_owned_by_token_program,
-        assert_signer, assert_token_program_matches_package, assert_update_authority_is_correct,
+        assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
+        assert_owned_by_token_program, assert_owned_by_same_program,
+        assert_token_program_matches_package, assert_update_authority_is_correct,
         assert_verified_member_of_collection, check_token_standard, create_or_allocate_account_raw,
         decrement_collection_size, get_owner_from_token_account, increment_collection_size,
         process_create_metadata_accounts_logic,
@@ -640,6 +641,7 @@ pub fn process_convert_master_edition_v1_to_v2(
     assert_owned_by(master_edition_info, program_id)?;
     assert_owned_by_token_program(one_time_printing_auth_mint_info)?;
     assert_owned_by_token_program(printing_mint_info)?;
+    assert_owned_by_same_program(one_time_printing_auth_mint_info, printing_mint_info)?;
     let master_edition = MasterEditionV1::from_account_info(master_edition_info)?;
     let printing_mint: Mint = assert_initialized(printing_mint_info)?;
     let auth_mint: Mint = assert_initialized(one_time_printing_auth_mint_info)?;
