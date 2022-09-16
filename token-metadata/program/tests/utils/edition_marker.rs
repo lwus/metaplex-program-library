@@ -106,6 +106,7 @@ impl EditionMarker {
             &self.token,
             &self.mint.pubkey(),
             &context.payer.pubkey(),
+            &spl_token::id(),
         )
         .await?;
         mint_tokens(
@@ -115,6 +116,7 @@ impl EditionMarker {
             1,
             &context.payer.pubkey(),
             None,
+            &spl_token::id(),
         )
         .await?;
 
@@ -155,6 +157,7 @@ impl EditionMarker {
             &self.token,
             &self.mint.pubkey(),
             &context.payer.pubkey(),
+            &spl_token::id(),
         )
         .await?;
         mint_tokens(
@@ -164,6 +167,7 @@ impl EditionMarker {
             1,
             &context.payer.pubkey(),
             None,
+            &spl_token::id(),
         )
         .await?;
 

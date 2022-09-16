@@ -120,6 +120,7 @@ mod create_meta_accounts {
             &test_metadata.token,
             &test_metadata.mint.pubkey(),
             &payer_pubkey,
+            &spl_token::id(),
         )
         .await
         .unwrap();
@@ -130,6 +131,7 @@ mod create_meta_accounts {
             1,
             &payer_pubkey,
             None,
+            &spl_token::id(),
         )
         .await
         .unwrap();

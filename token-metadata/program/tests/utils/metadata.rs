@@ -57,6 +57,7 @@ impl Metadata {
             &self.token,
             &self.mint.pubkey(),
             &context.payer.pubkey(),
+            &spl_token::id(),
         )
         .await?;
         mint_tokens(
@@ -66,6 +67,7 @@ impl Metadata {
             1,
             &context.payer.pubkey(),
             None,
+            &spl_token::id(),
         )
         .await?;
 
@@ -119,6 +121,7 @@ impl Metadata {
             &self.token,
             &self.mint.pubkey(),
             &context.payer.pubkey(),
+            &spl_token::id(),
         )
         .await?;
         mint_tokens(
@@ -128,6 +131,7 @@ impl Metadata {
             1,
             &context.payer.pubkey(),
             None,
+            &spl_token::id(),
         )
         .await?;
 
@@ -184,6 +188,7 @@ impl Metadata {
             &self.token,
             &self.mint.pubkey(),
             &context.payer.pubkey(),
+            &spl_token::id(),
         )
         .await?;
         mint_tokens(
@@ -193,6 +198,7 @@ impl Metadata {
             1,
             &context.payer.pubkey(),
             None,
+            &spl_token::id(),
         )
         .await?;
 

@@ -98,15 +98,22 @@ pub async fn mint_tokens(
     amount: u64,
     owner: &Pubkey,
     additional_signer: Option<&Keypair>,
+    spl_token: &Pubkey,
 ) -> Result<(), BanksClientError> {
     let mut signing_keypairs = vec![&context.payer];
     if let Some(signer) = additional_signer {
         signing_keypairs.push(signer);
     }
 
+    let mint_to = if *spl_token == spl_token::id() {
+        spl_token::instruction::mint_to
+    } else {
+        spl_token_2022::instruction::mint_to
+    };
+
     let tx = Transaction::new_signed_with_payer(
         &[
-            spl_token::instruction::mint_to(&spl_token::id(), mint, account, owner, &[], amount)
+            mint_to(spl_token, mint, account, owner, &[], amount)
                 .unwrap(),
         ],
         Some(&context.payer.pubkey()),
@@ -122,8 +129,15 @@ pub async fn create_token_account(
     account: &Keypair,
     mint: &Pubkey,
     manager: &Pubkey,
+    spl_token: &Pubkey,
 ) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
+
+    let initialize_account = if *spl_token == spl_token::id() {
+        spl_token::instruction::initialize_account
+    } else {
+        spl_token_2022::instruction::initialize_account
+    };
 
     let tx = Transaction::new_signed_with_payer(
         &[
@@ -132,10 +146,10 @@ pub async fn create_token_account(
                 &account.pubkey(),
                 rent.minimum_balance(spl_token::state::Account::LEN),
                 spl_token::state::Account::LEN as u64,
-                &spl_token::id(),
+                spl_token,
             ),
-            spl_token::instruction::initialize_account(
-                &spl_token::id(),
+            initialize_account(
+                spl_token,
                 &account.pubkey(),
                 mint,
                 manager,

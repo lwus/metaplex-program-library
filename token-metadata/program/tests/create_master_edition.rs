@@ -200,6 +200,7 @@ mod create_master_edition {
             &fake_account,
             &fake_mint.pubkey(),
             &payer_pubkey,
+            &spl_token::id(),
         )
         .await
         .unwrap();
@@ -210,6 +211,7 @@ mod create_master_edition {
             1000000,
             &payer_pubkey,
             None,
+            &spl_token::id(),
         )
         .await
         .unwrap();
@@ -355,6 +357,7 @@ mod create_master_edition {
             &fake_account,
             &fake_mint.pubkey(),
             &payer_pubkey,
+            &spl_token::id(),
         )
         .await
         .unwrap();
@@ -365,6 +368,7 @@ mod create_master_edition {
             1000000,
             &payer_pubkey,
             None,
+            &spl_token::id(),
         )
         .await
         .unwrap();

@@ -72,6 +72,7 @@ mod update_primary_sale_happened_via_token {
             &fake_token_account,
             &fake_mint.pubkey(),
             &payer_pubkey,
+            &spl_token::id(),
         )
         .await
         .unwrap();
@@ -82,6 +83,7 @@ mod update_primary_sale_happened_via_token {
             10000000,
             &payer_pubkey,
             None,
+            &spl_token::id(),
         )
         .await
         .unwrap();

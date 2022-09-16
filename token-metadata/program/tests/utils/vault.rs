@@ -48,7 +48,7 @@ impl Vault {
             vault_pubkey.as_ref(),
         ];
         let (authority, _) = Pubkey::find_program_address(seeds, &metaplex_token_vault_id);
-        create_token_account(context, &store, &token_mint_pubkey, &authority).await?;
+        create_token_account(context, &store, &token_mint_pubkey, &authority, &spl_token::id()).await?;
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_add_token_to_inactive_vault_instruction(
@@ -120,6 +120,7 @@ impl Vault {
             &outstanding_token_account,
             &self.mint.pubkey(),
             &context.payer.pubkey(),
+            &spl_token::id(),
         )
         .await?;
         create_token_account(
@@ -127,6 +128,7 @@ impl Vault {
             &paying_token_account,
             &external_price.price_mint.pubkey(),
             &context.payer.pubkey(),
+            &spl_token::id(),
         )
         .await?;
 
@@ -181,6 +183,7 @@ impl Vault {
             &self.redeem_treasury,
             &external_price.price_mint.pubkey(),
             &authority,
+            &spl_token::id(),
         )
         .await?;
         create_token_account(
@@ -188,6 +191,7 @@ impl Vault {
             &self.fraction_treasury,
             &self.mint.pubkey(),
             &authority,
+            &spl_token::id(),
         )
         .await?;
 
