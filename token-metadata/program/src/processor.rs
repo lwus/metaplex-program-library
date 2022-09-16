@@ -527,7 +527,7 @@ pub fn process_create_master_edition(
     assert_token_program_matches_package(token_program_info)?;
     assert_mint_authority_matches_mint(&mint.mint_authority, mint_authority_info)?;
     assert_owned_by(metadata_account_info, program_id)?;
-    assert_owned_by_token_program(mint_info)?;
+    assert_owned_by(mint_info, token_program_info.key)?;
 
     if metadata.mint != *mint_info.key {
         return Err(MetadataError::MintMismatch.into());
@@ -1084,7 +1084,6 @@ pub fn process_approve_use_authority(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
-    assert_token_program_matches_package(&token_program_account_info)?;
     assert_signer(owner_info)?;
     assert_signer(payer)?;
     assert_currently_holding(
@@ -1094,6 +1093,7 @@ pub fn process_approve_use_authority(
         &metadata,
         mint_info,
         token_account_info,
+        token_program_account_info,
     )?;
     let metadata_uses = metadata.uses.unwrap();
     let bump_seed = assert_use_authority_derivation(
@@ -1167,7 +1167,6 @@ pub fn process_revoke_use_authority(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
-    assert_token_program_matches_package(&token_program_account_info)?;
     assert_signer(owner_info)?;
     assert_currently_holding(
         program_id,
@@ -1176,6 +1175,7 @@ pub fn process_revoke_use_authority(
         &metadata,
         mint_info,
         token_account_info,
+        token_program_account_info,
     )?;
     let data = &mut use_authority_record_info.try_borrow_mut_data()?;
     process_use_authority_validation(data.len(), false)?;
@@ -1248,7 +1248,6 @@ pub fn process_utilize(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
-    assert_token_program_matches_package(&token_program_account_info)?;
     assert_signer(user_info)?;
     assert_currently_holding(
         program_id,
@@ -1257,6 +1256,7 @@ pub fn process_utilize(
         &metadata,
         mint_info,
         token_account_info,
+        token_program_account_info,
     )?;
     let mut metadata = Metadata::from_account_info(metadata_info)?;
     let metadata_uses = metadata.uses.unwrap();
@@ -1582,8 +1582,6 @@ pub fn process_freeze_delegated_account(
     let mint_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
 
-    assert_token_program_matches_package(&token_program_account_info)?;
-
     // assert that edition pda is the freeze authority of this mint
     let mint: Mint = assert_initialized(mint_info)?;
     assert_owned_by(edition_info, program_id)?;
@@ -1591,7 +1589,12 @@ pub fn process_freeze_delegated_account(
 
     // assert delegate is signer and delegated tokens
     assert_signer(delegate_info)?;
-    assert_delegated_tokens(delegate_info, mint_info, token_account_info)?;
+    assert_delegated_tokens(
+        delegate_info,
+        mint_info,
+        token_account_info,
+        token_program_account_info,
+    )?;
 
     let edition_info_path = Vec::from([
         PREFIX.as_bytes(),
@@ -1635,7 +1638,6 @@ pub fn process_thaw_delegated_account(
     let edition_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
-    assert_token_program_matches_package(&token_program_account_info)?;
 
     // assert that edition pda is the freeze authority of this mint
     let mint: Mint = assert_initialized(mint_info)?;
@@ -1644,7 +1646,12 @@ pub fn process_thaw_delegated_account(
 
     // assert delegate is signer and delegated tokens
     assert_signer(delegate_info)?;
-    assert_delegated_tokens(delegate_info, mint_info, token_account_info)?;
+    assert_delegated_tokens(
+        delegate_info,
+        mint_info,
+        token_account_info,
+        token_program_account_info,
+    )?;
 
     let edition_info_path = Vec::from([
         PREFIX.as_bytes(),
@@ -1740,6 +1747,7 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
         &metadata,
         mint_info,
         token_info,
+        spl_token_program_info,
     )?;
 
     // Owned by token-metadata program.

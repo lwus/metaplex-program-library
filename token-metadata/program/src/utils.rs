@@ -1119,9 +1119,8 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     } = accounts;
 
     assert_token_program_matches_package(token_program_account_info)?;
-    assert_owned_by_token_program(mint_info)?;
-    assert_owned_by_token_program(token_account_info)?;
-    assert_owned_by_same_program(mint_info, token_account_info)?;
+    assert_owned_by(mint_info, token_program_account_info.key)?;
+    assert_owned_by(token_account_info, token_program_account_info.key)?;
     assert_owned_by(master_edition_account_info, program_id)?;
     assert_owned_by(master_metadata_account_info, program_id)?;
 
@@ -1220,10 +1219,12 @@ pub fn assert_currently_holding(
     metadata: &Metadata,
     mint_info: &AccountInfo,
     token_account_info: &AccountInfo,
+    token_program_account_info: &AccountInfo,
 ) -> ProgramResult {
+    assert_token_program_matches_package(&token_program_account_info)?;
     assert_owned_by(metadata_info, program_id)?;
-    assert_owned_by_token_program(mint_info)?;
-    assert_owned_by_token_program(token_account_info)?;
+    assert_owned_by(mint_info, token_program_account_info.key)?;
+    assert_owned_by(token_account_info, token_program_account_info.key)?;
     assert_owned_by_same_program(mint_info, token_account_info)?;
 
     let token_account: Account = assert_initialized(token_account_info)?;
@@ -1267,9 +1268,11 @@ pub fn assert_delegated_tokens(
     delegate: &AccountInfo,
     mint_info: &AccountInfo,
     token_account_info: &AccountInfo,
+    token_program_account_info: &AccountInfo,
 ) -> ProgramResult {
-    assert_owned_by_token_program(mint_info)?;
-    assert_owned_by_token_program(token_account_info)?;
+    assert_token_program_matches_package(&token_program_account_info)?;
+    assert_owned_by(mint_info, token_program_account_info.key)?;
+    assert_owned_by(token_account_info, token_program_account_info.key)?;
     assert_owned_by_same_program(mint_info, token_account_info)?;
 
     let token_account: Account = assert_initialized(token_account_info)?;
