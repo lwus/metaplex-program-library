@@ -21,7 +21,7 @@ use solana_program::{
     program::{invoke, invoke_signed},
     program_error::ProgramError,
     program_option::COption,
-    program_pack::{IsInitialized, Pack},
+    program_pack::Pack,
     pubkey::Pubkey,
     system_instruction,
     sysvar::{rent::Rent, Sysvar},
@@ -154,14 +154,16 @@ pub fn assert_data_valid(
 }
 
 /// assert initialized account
-pub fn assert_initialized<T: Pack + IsInitialized>(
+pub fn assert_initialized<T: spl_token_2022::extension::BaseState>(
     account_info: &AccountInfo,
 ) -> Result<T, ProgramError> {
-    let account: T = T::unpack_unchecked(&account_info.data.borrow())?;
-    if !account.is_initialized() {
+    use spl_token_2022::extension::StateWithExtensions;
+    let account_data = account_info.try_borrow_data()?;
+    let account = StateWithExtensions::<T>::unpack(&account_data)?;
+    if !account.base.is_initialized() {
         Err(MetadataError::Uninitialized.into())
     } else {
-        Ok(account)
+        Ok(account.base)
     }
 }
 
