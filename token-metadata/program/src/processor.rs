@@ -26,8 +26,8 @@ use crate::{
         assert_owned_by_token_program, assert_owned_by_same_program,
         assert_token_program_matches_package, assert_update_authority_is_correct,
         assert_verified_member_of_collection, check_token_standard, create_or_allocate_account_raw,
-        decrement_collection_size, get_owner_from_token_account, increment_collection_size,
-        process_create_metadata_accounts_logic,
+        decrement_collection_size, get_owner_from_token_account, has_mint_close_authority,
+        increment_collection_size, process_create_metadata_accounts_logic,
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
         spl_token_burn, spl_token_close, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
         MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams, TokenCloseParams,
@@ -1757,13 +1757,15 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
     assert_signer(owner_info)?;
 
     // Has a valid Master Edition or Print Edition.
-    let edition_info_path = Vec::from([
+    let mut edition_info_path = Vec::from([
         PREFIX.as_bytes(),
         program_id.as_ref(),
         mint_info.key.as_ref(),
         EDITION.as_bytes(),
     ]);
-    assert_derivation(program_id, edition_info, &edition_info_path)?;
+    let edition_info_bump = assert_derivation(
+        program_id, edition_info, &edition_info_path)?;
+    edition_info_path.push(std::slice::from_ref(&edition_info_bump));
 
     // Burn the SPL token
     let params = TokenBurnParams {
@@ -1785,6 +1787,20 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
         authority_signer_seeds: None,
     };
     spl_token_close(params)?;
+
+    if *spl_token_program_info.key == spl_token_2022::id() {
+        if has_mint_close_authority(mint_info)? {
+            // Close mint account.
+            let params = TokenCloseParams {
+                token_program: spl_token_program_info.clone(),
+                account: mint_info.clone(),
+                destination: owner_info.clone(),
+                owner: edition_info.clone(),
+                authority_signer_seeds: Some(edition_info_path.as_slice()),
+            };
+            spl_token_close(params)?;
+        }
+    }
 
     // Close metadata and edition accounts by transferring rent funds to owner and
     // zeroing out the data.

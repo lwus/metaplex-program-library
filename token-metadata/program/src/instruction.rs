@@ -1387,6 +1387,8 @@ pub fn thaw_delegated_account(
 ///# Burn NFT
 ///
 /// Burn an NFT, closing its token, metadata and edition accounts.
+/// NB: If `spl_token` program is spl-token-2022, and the mint account has the
+/// `mint_close_authority` extension, this will also close that mint account
 ///
 /// 0. `[writable]` NFT metadata
 /// 1. `[writable, signer]` Owner of NFT
