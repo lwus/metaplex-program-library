@@ -47,7 +47,7 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
 };
-use spl_token::{
+use spl_token_2022::{
     instruction::{approve, freeze_account, revoke, thaw_account},
     state::{Account, Mint},
 };

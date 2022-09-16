@@ -26,7 +26,7 @@ use solana_program::{
     system_instruction,
     sysvar::{rent::Rent, Sysvar},
 };
-use spl_token::{
+use spl_token_2022::{
     instruction::{burn, close_account, mint_to, set_authority, AuthorityType},
     state::{Account, Mint},
 };
@@ -835,6 +835,7 @@ pub fn assert_signer(account_info: &AccountInfo) -> ProgramResult {
 
 pub fn assert_owned_by_token_program(account: &AccountInfo) -> ProgramResult {
     assert_owned_by(account, &spl_token::id())
+        .or(assert_owned_by(account, &spl_token_2022::id()))
 }
 
 pub fn assert_owned_by_same_program(lhs: &AccountInfo, rhs: &AccountInfo) -> ProgramResult {
@@ -854,7 +855,8 @@ pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> ProgramResult {
 }
 
 pub fn assert_token_program_matches_package(token_program_info: &AccountInfo) -> ProgramResult {
-    if *token_program_info.key != spl_token::id() {
+    if *token_program_info.key != spl_token::id()
+        && *token_program_info.key != spl_token_2022::id() {
         return Err(MetadataError::InvalidTokenProgram.into());
     }
 
